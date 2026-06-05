@@ -1,6 +1,6 @@
 # Brantford Puck Dynamics
 
-A research-style simulation framework for modeling out-of-play puck trajectories in an ice hockey arena.
+A simulation framework for modeling out-of-play puck trajectories in an ice hockey arena.
 
 ## Current scope
 
