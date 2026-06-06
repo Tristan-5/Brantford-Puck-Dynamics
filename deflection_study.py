@@ -1,8 +1,0 @@
-"""Baseline experiment with a simple Monte Carlo run."""
-
-from puck_dynamics.simulation.runner import run_monte_carlo
-
-
-if __name__ == "__main__":
-    points = run_monte_carlo(num_samples=1000, seed=42)
-    print(f"Generated {len(points)} landing points")
