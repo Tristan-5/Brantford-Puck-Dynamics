@@ -1,0 +1,6 @@
+"""Basic import tests."""
+
+
+def test_import():
+    import puck_dynamics
+    assert puck_dynamics.__version__ == "0.1.0"
