@@ -1,8 +1,15 @@
-""Baseline experiment with a simple Monte Carlo run."""
+from pathlib import Path
+import sys
+
+ROOT = Path(_file_).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.imsert(0, str(SRC))
+
+"""Baseline experiment with a simple MOnte Carlo run."""
 
 from puck_dynamics.simulation.runner import run_monte_carlo
 
-
-if __name__ == "__main__":
+if _name_ == "_main_":
     points = run_monte_carlo(num_samples=1000, seed=42)
     print(f"Generated {len(points)} landing points")
