@@ -13,3 +13,14 @@ class Event(ABC):
     @abstractmethod
     def apply(self, state: State) -> State:
         raise NotImplementedError
+
+
+
+
+
+
+class Event:
+    name = "event"
+
+    def apply(self, state):
+        return state
