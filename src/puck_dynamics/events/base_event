@@ -1,0 +1,5 @@
+class Event:
+    name = "event"
+
+    def apply(self, state):
+        return state
