@@ -1,16 +1,11 @@
-"""Glass reflection event handling."""
+from .base_event import Event
 
-from __future__ import annotations
-from ..physics.kinematics import State
+class GlassImpact(Event):
+    name = "glass"
 
+    def __init__(self, restitution=0.85):
+        self.e = restitution
 
-def reflect_off_glass(state: State, restitution: float) -> State:
-    """Reflect the x-component of velocity at a boundary."""
-    return State(
-        x=state.x,
-        y=state.y,
-        vx=-state.vx * restitution,
-        vy=state.vy * restitution,
-        t=state.t,
-        active=state.active,
-    )
+    def apply(self, state):
+        state.vx = -self.e * state.vx
+        return state
