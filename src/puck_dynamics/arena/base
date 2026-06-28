@@ -1,0 +1,165 @@
+"""
+Abstract base classes for arena objects.
+
+Every physical feature of the arena (boards, glass, goals,
+faceoff circles, seating sections, etc.) inherits from one
+or more of these classes.
+
+These interfaces ensure that the renderer, collision engine,
+and analysis modules can interact with arena features in a
+consistent way.
+"""
+
+from __future__ import annotations
+
+from abc import ABC
+from abc import abstractmethod
+
+from matplotlib.axes import Axes
+
+from .coordinate_system import Point3D
+
+# BASE FEATURE
+
+
+class ArenaFeature(ABC):
+    """
+    Base class for every arena feature.
+    """
+
+    def __init__(self, name: str):
+
+        self.name = name
+
+    def __repr__(self) -> str:
+
+        return f"{self.__class__.__name__}(name='{self.name}')"
+
+
+# DRAWABLE OBJECT
+
+
+class DrawableFeature(ArenaFeature):
+    """
+    Feature that can draw itself onto a matplotlib axis.
+    """
+
+    @abstractmethod
+    def draw(self, ax: Axes) -> None:
+        """
+        Draw the feature.
+
+        Parameters
+        ----------
+        ax
+            Matplotlib axis.
+        """
+        raise NotImplementedError
+
+# COLLISION OBJECT
+
+
+class CollisionFeature(ArenaFeature):
+    """
+    Feature that can detect intersections.
+    """
+
+    @abstractmethod
+    def contains(
+        self,
+        point: Point3D,
+    ) -> bool:
+        """
+        Determine whether a point lies inside the feature.
+        """
+        raise NotImplementedError
+
+# REFLECTIVE OBJECT
+
+
+class ReflectiveFeature(CollisionFeature):
+    """
+    Feature capable of reflecting a puck.
+
+    Examples
+    --------
+    Boards
+
+    Glass
+
+    Crossbar
+    """
+
+    @abstractmethod
+    def reflect(
+        self,
+        velocity: tuple[float, float, float],
+    ) -> tuple[float, float, float]:
+        """
+        Reflect an incoming velocity vector.
+        """
+        raise NotImplementedError
+
+# LABELLED OBJECT
+
+
+class LabelledFeature(ArenaFeature):
+    """
+    Feature possessing a label location.
+    """
+
+    @property
+    @abstractmethod
+    def label_position(self) -> tuple[float, float]:
+        """
+        Coordinates for displaying labels.
+        """
+        raise NotImplementedError
+
+
+# BOUNDED OBJECT
+
+
+class BoundedFeature(ArenaFeature):
+    """
+    Feature possessing a rectangular bounding box.
+
+    Useful for rapid spatial searches.
+    """
+
+    @property
+    @abstractmethod
+    def bounds(
+        self,
+    ) -> tuple[
+        float,
+        float,
+        float,
+        float,
+    ]:
+        """
+        Returns
+
+        xmin,
+        xmax,
+        ymin,
+        ymax
+        """
+        raise NotImplementedError
+
+# SERIALIZABLE OBJECT
+
+
+class SerializableFeature(ArenaFeature):
+    """
+    Feature capable of exporting itself to a dictionary.
+
+    Useful for JSON, YAML, etc.
+    """
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """
+        Export feature.
+        """
+        raise NotImplementedError
