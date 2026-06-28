@@ -1,0 +1,239 @@
+"""
+Coordinate systems and geometric transformations for the
+puck_dynamics package.
+
+All simulation coordinates use SI units (metres).
+
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import math
+
+import numpy as np
+
+from .geometry import ArenaDimensions
+
+# 3D POINT
+
+@dataclass(slots=True)
+class Point3D:
+    """
+    Three-dimensional point.
+
+    Parameters
+    ----------
+    x : float
+        x-coordinate [m]
+
+    y : float
+        y-coordinate [m]
+
+    z : float
+        Height above the ice [m]
+    """
+
+    x: float
+    y: float
+    z: float = 0.0
+
+    def as_array(self) -> np.ndarray:
+        """Return point as NumPy array."""
+        return np.array([self.x, self.y, self.z], dtype=float)
+
+    def copy(self) -> "Point3D":
+        return Point3D(self.x, self.y, self.z)
+
+# COORDINATE SYSTEM
+
+class CoordinateSystem:
+    """
+    Coordinate transformations for the offensive zone.
+
+    Local offensive-zone coordinates:
+
+        (0,0)
+        ┌───────────────────────────────► +x
+        |
+        │
+        |
+        │
+        |
+        ▼
+
+       +y
+
+    The renderer later converts these coordinates into
+    full-rink coordinates.
+    """
+
+    def __init__(self, dimensions: ArenaDimensions | None = None):
+
+        self.dimensions = dimensions or ArenaDimensions()
+
+        self.local_length = (
+            self.dimensions.rink_length
+            - self.dimensions.offensive_zone_start
+        )
+
+        self.local_width = self.dimensions.rink_width
+
+    # ------------------------------------------------------
+
+    def local_to_world(
+        self,
+        x: float,
+        y: float,
+    ) -> tuple[float, float]:
+        """
+        Convert offensive-zone coordinates into full-rink coordinates.
+        """
+
+        return (
+            x + self.dimensions.offensive_zone_start,
+            y,
+        )
+
+    # --------------------------------------------------
+
+    def world_to_local(
+        self,
+        x: float,
+        y: float,
+    ) -> tuple[float, float]:
+        """
+        Convert rink coordinates into offensive-zone coordinates.
+        """
+
+        return (
+            x - self.dimensions.offensive_zone_start,
+            y,
+        )
+
+    # ----------------------------------------------------
+
+    @staticmethod
+    def distance(
+        p1: Point3D,
+        p2: Point3D,
+    ) -> float:
+        """
+        Euclidean distance.
+        """
+
+        return math.sqrt(
+            (p1.x - p2.x) ** 2
+            + (p1.y - p2.y) ** 2
+            + (p1.z - p2.z) ** 2
+        )
+
+    # --------------------------------------------------
+
+    @staticmethod
+    def translate(
+        point: Point3D,
+        dx: float,
+        dy: float,
+        dz: float = 0.0,
+    ) -> Point3D:
+        """
+        Translate a point.
+        """
+
+        return Point3D(
+            point.x + dx,
+            point.y + dy,
+            point.z + dz,
+        )
+
+    # ----------------------------------------------
+
+    @staticmethod
+    def rotate_xy(
+        point: Point3D,
+        angle_deg: float,
+        origin: Point3D | None = None,
+    ) -> Point3D:
+        """
+        Rotate a point in the xy-plane.
+        """
+
+        if origin is None:
+            origin = Point3D(0.0, 0.0, 0.0)
+
+        theta = math.radians(angle_deg)
+
+        x = point.x - origin.x
+        y = point.y - origin.y
+
+        xr = (
+            x * math.cos(theta)
+            - y * math.sin(theta)
+        )
+
+        yr = (
+            x * math.sin(theta)
+            + y * math.cos(theta)
+        )
+
+        return Point3D(
+            xr + origin.x,
+            yr + origin.y,
+            point.z,
+        )
+
+    # -----------------------------------------------------
+
+    @staticmethod
+    def midpoint(
+        p1: Point3D,
+        p2: Point3D,
+    ) -> Point3D:
+        """
+        Midpoint of two points.
+        """
+
+        return Point3D(
+            (p1.x + p2.x) / 2,
+            (p1.y + p2.y) / 2,
+            (p1.z + p2.z) / 2,
+        )
+
+    # -------------------------------------------------
+
+    @staticmethod
+    def unit_vector(
+        p1: Point3D,
+        p2: Point3D,
+    ) -> np.ndarray:
+        """
+        Unit vector pointing from p1 toward p2.
+        """
+
+        vec = np.array([
+            p2.x - p1.x,
+            p2.y - p1.y,
+            p2.z - p1.z,
+        ])
+
+        norm = np.linalg.norm(vec)
+
+        if norm == 0:
+            return vec
+
+        return vec / norm
+
+    # ------------------------------------------------------
+
+    @staticmethod
+    def clamp(
+        value: float,
+        minimum: float,
+        maximum: float,
+    ) -> float:
+        """
+        Clamp a value to an interval.
+        """
+
+        return max(minimum, min(maximum, value))
