@@ -1,0 +1,290 @@
+"""
+
+Three-dimensional representation of a regulation hockey goal.
+
+The Goal class represents only the physical geometry of the goal.
+It does not determine whether a goal has been scored—that logic is
+handled by the event engine.
+
+This class supplies
+
+• rendering
+• geometric queries
+• collision primitives
+• serialization
+• helper geometry
+
+for every other module in the simulator.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
+
+from ..base import ArenaFeature
+from ..coordinate_system import Point3D
+
+# NHL REGULATION DIMENSIONS
+
+GOAL_WIDTH = 1.83          # metres
+
+GOAL_DEPTH = 1.12          # metres
+
+CROSSBAR_HEIGHT = 1.22     # metres
+
+POST_RADIUS = 0.030        # 3 cm stel pipe
+
+CROSSBAR_RADIUS = 0.030
+
+class Goal(ArenaFeature):
+    """
+    Three-dimensional hockey goal.
+
+    Parameters
+    ----------
+    x
+        Goal-line x-coordinate.
+
+    y
+        Centre of goal.
+
+    width
+        Internal width.
+
+    depth
+        Goal depth.
+
+    crossbar_height
+        Height of crossbar.
+
+    Notes
+    -----
+    Coordinate system
+
+              z
+              ^
+              |
+              |
+              +------ y
+             /
+            /
+           /
+          x
+
+    """
+
+    def __init__(
+
+        self,
+
+        x: float,
+
+        y: float,
+
+        width: float = GOAL_WIDTH,
+
+        depth: float = GOAL_DEPTH,
+
+        crossbar_height: float = CROSSBAR_HEIGHT,
+
+    ):
+
+        super().__init__("Goal")
+
+        self.x = float(x)
+
+        self.y = float(y)
+
+        self.width = float(width)
+
+        self.depth = float(depth)
+
+        self.crossbar_height = float(crossbar_height)
+
+    # Bounding Geometry
+
+    @property
+    def xmin(self) -> float:
+
+        return self.x
+
+
+    @property
+    def xmax(self) -> float:
+
+        return self.x + self.depth
+
+
+    @property
+    def ymin(self) -> float:
+
+        return self.y - self.width / 2
+
+
+    @property
+    def ymax(self) -> float:
+
+        return self.y + self.width / 2
+
+
+    @property
+    def zmin(self) -> float:
+
+        return 0.0
+
+
+    @property
+    def zmax(self) -> float:
+
+        return self.crossbar_height
+
+    # Derived Geometry
+
+    @property
+    def centre(self):
+
+        return Point3D(
+
+            self.x + self.depth / 2,
+
+            self.y,
+
+            self.crossbar_height / 2,
+
+        )
+
+
+    @property
+    def left_post(self):
+
+        return Point3D(
+
+            self.x,
+
+            self.y - self.width / 2,
+
+            self.crossbar_height / 2,
+
+        )
+
+
+    @property
+    def right_post(self):
+
+        return Point3D(
+
+            self.x,
+
+            self.y + self.width / 2,
+
+            self.crossbar_height / 2,
+
+        )
+
+
+    @property
+    def crossbar(self):
+
+        """
+        Centre of the crossbar.
+        """
+
+        return Point3D(
+
+            self.x,
+
+            self.y,
+            self.crossbar_height,
+
+        )
+
+    @property
+    def bounds(self):
+
+        """
+        Axis-aligned bounding box.
+
+        Returns
+
+        xmin,xmax,ymin,ymax,zmin,zmax
+        """
+
+        return (
+
+            self.xmin,
+
+            self.xmax,
+
+            self.ymin,
+
+            self.ymax,
+
+            self.zmin,
+
+            self.zmax,
+
+        )
+
+    # Collision
+
+    def contains(
+
+        self,
+
+        point: Point3D,
+
+    ) -> bool:
+
+        """
+        Test whether a point lies inside the goal volume.
+        """
+
+        return (
+
+            self.xmin <= point.x <= self.xmax
+
+            and
+
+            self.ymin <= point.y <= self.ymax
+
+            and
+
+            self.zmin <= point.z <= self.zmax
+
+        )
+
+
+    def inside_goal_mouth(
+
+        self,
+
+        point: Point3D,
+
+        tolerance: float = 0.02,
+
+    ) -> bool:
+
+        """
+        Determine whether a puck crosses the goal plane.
+
+        This is the function that the scoring engine
+        will eventually call.
+        """
+
+        return (
+
+            abs(point.x - self.x) <= tolerance
+
+            and
+
+            self.ymin <= point.y <= self.ymax
+
+            and
+
+            self.zmin <= point.z <= self.zmax
+
+        )
