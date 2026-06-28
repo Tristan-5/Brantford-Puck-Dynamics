@@ -288,3 +288,206 @@ class Goal(ArenaFeature):
             self.zmin <= point.z <= self.zmax
 
         )
+    # Collision Primitives
+
+    @property
+    def left_post_base(self) -> Point3D:
+        """Base of the left goal post."""
+        return Point3D(
+            self.x,
+            self.ymin,
+            0.0,
+        )
+
+    @property
+    def left_post_top(self) -> Point3D:
+        """Top of the left goal post."""
+        return Point3D(
+            self.x,
+            self.ymin,
+            self.crossbar_height,
+        )
+
+    @property
+    def right_post_base(self) -> Point3D:
+        """Base of the right goal post."""
+        return Point3D(
+            self.x,
+            self.ymax,
+            0.0,
+        )
+
+    @property
+    def right_post_top(self) -> Point3D:
+        """Top of the right goal post."""
+        return Point3D(
+            self.x,
+            self.ymax,
+            self.crossbar_height,
+        )
+
+    @property
+    def crossbar_left(self) -> Point3D:
+        """Left endpoint of the crossbar."""
+        return self.left_post_top
+
+    @property
+    def crossbar_right(self) -> Point3D:
+        """Right endpoint of the crossbar."""
+        return self.right_post_top
+
+    def post_centres(self) -> tuple[Point3D, Point3D]:
+        """
+        Return the centres of the two posts.
+
+        These are useful for visualization and approximate
+        collision detection.
+        """
+        return (
+            self.left_post,
+            self.right_post,
+        )
+
+    def crossbar_endpoints(self) -> tuple[Point3D, Point3D]:
+        """
+        Return the two endpoints of the crossbar.
+        """
+        return (
+            self.crossbar_left,
+            self.crossbar_right,
+        )
+
+    # Rendering
+
+    def draw(
+        self,
+        ax: Axes,
+    ) -> None:
+        """
+        Draw a plan-view representation of the goal.
+        """
+
+        goal_patch = Rectangle(
+            (self.x, self.ymin),
+            self.depth,
+            self.width,
+            linewidth=2.0,
+            edgecolor="red",
+            facecolor="none",
+            zorder=20,
+        )
+
+        ax.add_patch(goal_patch)
+
+        ax.plot(
+            [self.x, self.x],
+            [self.ymin, self.ymax],
+            color="red",
+            linewidth=3,
+            zorder=25,
+        )
+
+    # Utility Functions
+
+    def volume(self) -> float:
+        """
+        Internal goal volume.
+
+        Returns
+        -------
+        float
+            Volume in cubic metres.
+        """
+        return (
+            self.depth
+            * self.width
+            * self.crossbar_height
+        )
+
+    def distance_to_centre(
+        self,
+        point: Point3D,
+    ) -> float:
+        """
+        Euclidean distance from a point to the goal centre.
+        """
+        dx = point.x - self.centre.x
+        dy = point.y - self.centre.y
+        dz = point.z - self.centre.z
+
+        return float(np.sqrt(dx * dx + dy * dy + dz * dz))
+
+    # Serialization
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Convert the goal to a dictionary.
+        """
+
+        return {
+            "type": "Goal",
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "depth": self.depth,
+            "crossbar_height": self.crossbar_height,
+        }
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: dict[str, Any],
+    ) -> "Goal":
+        """
+        Construct a Goal from a dictionary.
+        """
+
+        return cls(
+            x=data["x"],
+            y=data["y"],
+            width=data.get("width", GOAL_WIDTH),
+            depth=data.get("depth", GOAL_DEPTH),
+            crossbar_height=data.get(
+                "crossbar_height",
+                CROSSBAR_HEIGHT,
+            ),
+        )
+    # Representation
+
+    def __repr__(self) -> str:
+
+        return (
+            "Goal("
+            f"x={self.x:.2f}, "
+            f"y={self.y:.2f}, "
+            f"width={self.width:.2f}, "
+            f"depth={self.depth:.2f}, "
+            f"crossbar_height={self.crossbar_height:.2f}"
+            ")"
+        )
+
+# Stand-alone Demonstration
+
+if __name__ == "__main__":
+
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+
+    goal = Goal(
+        x=60.0,
+        y=12.95,
+    )
+
+    goal.draw(ax)
+
+    ax.set_aspect("equal")
+
+    ax.set_xlim(58, 62)
+
+    ax.set_ylim(10, 16)
+
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("y (m)")
+    ax.set_title("Goal Geometry")
+
+    plt.show()
