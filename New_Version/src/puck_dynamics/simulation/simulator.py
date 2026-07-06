@@ -8,6 +8,7 @@ from puck_dynamics.physics import World, ShotFactory, Puck
 from .trajectory import Trajectory
 from .seating_grid import SeatingGrid
 from .heatmap import Heatmap
+from .shot_sampler import sample_shot
 
 ShotSampler = Callable[[Vec], Puck]
 
@@ -15,16 +16,15 @@ class Simulator:
     def __init__(self,
                  rink: Rink | None = None,
                  shots: int = 10_000,
-                 sampler: ShotSampler | None = None,
                  record_path: bool = False):
         self.rink = rink or Rink()
         self.world = World(self.rink)
         self.num_shots = shots
-        self.sampler = sampler or ShotFactory.wrist
         self.record_path = record_path
+
     def _spawn(self) -> Puck:
-        origin = Vec(0, 0, 0.15)   # 15 cm above ice at centre by default
-        return self.sampler(origin)
+        spec = sample_shot()
+        return ShotFactory.from_spec(spec)
 
     def _run_single(self) -> Trajectory:
         puck = self._spawn()
