@@ -4,6 +4,8 @@ import math, random
 from puck_dynamics.geometry import Point3D as Vec
 from .puck import Puck, PuckState
 
+from simulation.shot_sampler import ShotSpec 
+
 @dataclass
 class ShotSpec:
     speed: float          # m/s
@@ -13,17 +15,17 @@ class ShotSpec:
 
 class ShotFactory:
     @staticmethod
-    def _spawn(spec: ShotSpec, origin: Vec) -> Puck:
-        v = spec.speed
-        elev = math.radians(spec.elev)
-        azim = math.radians(spec.azim)
+    def from_spec(spec: ShotSpec) -> Puck:
+        v   = spec.speed
+        elev= math.radians(spec.elev)
+        azim= math.radians(spec.azim)
 
-        vx =  v * math.cos(elev) * math.cos(azim)
-        vy =  v * math.cos(elev) * math.sin(azim)
-        vz =  v * math.sin(elev)
+        vx = v * math.cos(elev) * math.cos(azim)
+        vy = v * math.cos(elev) * math.sin(azim)
+        vz = v * math.sin(elev)
 
         spin_rad = spec.spin * 2*math.pi
-        state = PuckState(origin,
+        state = PuckState(spec.origin,
                           Vec(vx, vy, vz),
                           Vec(0, 0, spin_rad))
         return Puck(state)
