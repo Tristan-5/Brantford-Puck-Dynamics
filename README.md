@@ -1,3 +1,5 @@
+Please go to v3.5 for the newest version of the code (New_Version is not the newest). 
+
 # Heatmap Simulation
 
 This repository is currently documented as a heatmap simulation project for out-of-play puck landing probability.
